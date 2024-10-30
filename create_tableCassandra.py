@@ -4,3 +4,9 @@ CREATE KEYSPACE IF NOT EXISTS my_keyspace WITH REPLICATION = {
 };
 
 USE my_keyspace;
+
+CREATE TABLE IF NOT EXISTS sample_data (
+    id int PRIMARY KEY,
+    name text,
+    value int
+);
