@@ -1,0 +1,17 @@
+version: '3.8'
+
+services:
+  mysql:
+    image: mysql:latest
+    container_name: mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: 1234  # Cambia esta contraseña
+      MYSQL_DATABASE: my_database        # (Opcional) Nombre de una base de datos inicial
+      MYSQL_USER: javi                   # (Opcional) Usuario adicional
+      MYSQL_PASSWORD: 1234
+    ports: 
+      - "3307:3306"
+
+volumes:
+  mysql_data:
+
