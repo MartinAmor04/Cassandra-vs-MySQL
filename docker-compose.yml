@@ -1,8 +1,18 @@
 version: '3'
 
 services:
-   cassandra-1:
-     image: cassandra
-     restart: always
-     ports:
-       - 9042:9042
+  cassandra:
+    image: cassandra:latest  
+    restart: always
+    ports:
+      - "9042:9042"  
+    container_name: cassandra  
+    environment:
+      - CASSANDRA_CLUSTER_NAME=TestCluster
+    volumes:
+      - cassandra-data:/var/lib/cassandra
+
+volumes:
+  cassandra-data:
+    driver: local
+
