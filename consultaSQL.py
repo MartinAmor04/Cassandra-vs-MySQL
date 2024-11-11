@@ -25,7 +25,7 @@ try:
         cursor = connection.cursor()
 
         # Consulta que calcula la media de una columna
-        query = "SELECT AVG(value) FROM sample_data"
+        query = "SELECT AVG(numero) FROM dataset"
 
         # Medir el tiempo de inicio
         start_time = time.time()
