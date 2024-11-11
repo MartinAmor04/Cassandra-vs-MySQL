@@ -1,37 +1,31 @@
 import mysql.connector
-import random
-import string
+import csv
 
-# Configuración de conexión a MySQL
-config = {
-    'host': '127.0.0.1',
-    'port': 3307,
-    'user': 'root',
-    'password': '1234',  
-    'database': 'my_database'      
-}
+# Configurar la conexión a MySQL
+conn = mysql.connector.connect(
+    host='localhost',
+    port='3307',
+    user='root',
+    password='1234',
+    database='my_database'
+)
+cursor = conn.cursor()
 
-# Conectar a la base de datos
-try:
-    connection = mysql.connector.connect(**config)
-    cursor = connection.cursor()
+# Leer el archivo CSV y realizar inserciones en la base de datos
+csv_file = 'dataset.csv'
+with open(csv_file, newline='', encoding='utf-8') as csvfile:
+    reader = csv.DictReader(csvfile)
+    for row in reader:
+        cursor.execute('''
+        INSERT INTO dataset (id, nombre, numero)
+        VALUES (%s, %s, %s);
+        ''', (row['id'], row['nombre'], row['número']))
 
-    # Inserción de 1000 datos
-    for i in range(1000):
-        name = f'nombre {i}'
-        value = i * 0.5
-        sql_insert_query = "INSERT INTO sample_data (name, value) VALUES (%s,%s)"
-        cursor.execute(sql_insert_query, (name, value))
+# Confirmar los cambios y cerrar la conexión
+conn.commit()
+cursor.close()
+conn.close()
 
-    connection.commit()  # Asegúrate de aplicar todas las transacciones
-    print("Se han insertado 1000 datos correctamente.")
+print(f"Datos insertados en la base de datos MySQL con éxito.")
 
-except mysql.connector.Error as err:
-    print(f"Error: {err}")
-
-finally:
-    # Cerrar la conexión
-    if connection.is_connected():
-        cursor.close()
-        connection.close()
 
