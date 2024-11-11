@@ -19,6 +19,10 @@ session.execute("""
     DROP TABLE IF EXISTS id_counter
 """)
 
+session.execute("""
+    DROP TABLE IF EXISTS sample_data
+""")
+
 # Crear la tabla id_counter con la columna counter_value definida como COUNTER
 session.execute("""
     CREATE TABLE IF NOT EXISTS id_counter (
@@ -72,7 +76,7 @@ session.execute("""
 """)
 
 # Insertar 1000 registros
-for i in range(1000):
+for i in range(1000000):
     # Generar un nombre y un valor
     name = f'nombre {i}'
     value = int(i * 0.5)
@@ -85,7 +89,7 @@ for i in range(1000):
     """)
     session.execute(insert_statement, (id, name, value))
 
-print("Se han insertado 1000 datos correctamente.")
+print("Se han insertado 1000000 datos correctamente.")
 
 # Cerrar la conexión
 session.shutdown()
