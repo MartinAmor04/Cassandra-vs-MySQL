@@ -5,46 +5,46 @@ import time
 # Parámetros de configuración
 host = "127.0.0.1"
 port = 9042
-keyspace = "datos"
+keyspace = "test_db"
 
 # Autenticación (si se requiere)
 auth_provider = PlainTextAuthProvider(username='cassandra_user', password='cassandra_password')
 
+# Conexión a Cassandra
 try:
-    # Conexión a la base de datos Cassandra
     cluster = Cluster([host], port=port, auth_provider=auth_provider)
     session = cluster.connect(keyspace)
+    print("Conexión exitosa a Cassandra.")
+except Exception as e:
+    print("Error al conectar a Cassandra:", e)
 
-    # Consulta para obtener todos los valores
-    query = "SELECT value FROM sample_data"
+# Función para calcular la media de la columna 'numero' y contar el número de filas
+query = "SELECT numero FROM usuarios"
+start_time = time.time()  # Medir el tiempo de inicio
 
-    # Medir el tiempo de inicio
-    start_time = time.time()
-
-    # Ejecutar la consulta
+try:
     rows = session.execute(query)
-
-    # Obtener los valores y calcular la media
     total = 0
     count = 0
-
+    
+    # Contamos las filas y sumamos los valores de 'numero'
     for row in rows:
-        total += row.value
+        total += row.numero
         count += 1
-
+    
     # Calcular la media
     if count > 0:
         avg_value = total / count
     else:
         avg_value = None  # No hay datos
-
+    
     # Medir el tiempo de finalización
     end_time = time.time()
+    elapsed_time = end_time - start_time  # Calcular el tiempo de ejecución
 
-    # Calcular el tiempo de ejecución
-    elapsed_time = end_time - start_time
-
-    # Mostrar el resultado y el tiempo de ejecución
+    # Mostrar el resultado
+    print(f"Número total de filas: {count}")
+    
     if avg_value is not None:
         print(f"Resultado de la media: {avg_value}")
     else:
@@ -53,7 +53,8 @@ try:
     print(f"Tiempo de ejecución de la consulta: {elapsed_time:.4f} segundos")
 
 except Exception as e:
-    print("Error al conectar a Cassandra:", e)
+    print(f"Error al calcular la media o contar las filas: {e}")
 
-finally:
-    cluster.shutdown()
+# Cerrar la conexión
+cluster.shutdown()
+print("Conexión cerrada.")

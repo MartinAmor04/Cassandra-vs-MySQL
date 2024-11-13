@@ -5,12 +5,12 @@ cluster = Cluster(['127.0.0.1'])  # Cambia esto si tu Cassandra está en otro ho
 session = cluster.connect()
 
 # Seleccionar el keyspace donde vamos a trabajar
-session.set_keyspace('datos')  # Cambia 'datos' si tu keyspace tiene otro nombre
+session.set_keyspace('test_db')  # Cambia 'datos' si tu keyspace tiene otro nombre
 
 # Función para contar las filas de la tabla 'sample_data'
 def count_rows():
     # Definir la consulta COUNT
-    query = "SELECT COUNT(*) FROM sample_data"
+    query = "SELECT COUNT(*) FROM usuarios"
     
     try:
         # Ejecutar la consulta
@@ -28,7 +28,7 @@ def count_rows():
 # Función para obtener registros de la tabla 'sample_data' (limitados a 10)
 def query_sample_data():
     # Definir la consulta SELECT
-    query = "SELECT * FROM sample_data LIMIT 10"
+    query = "SELECT * FROM usuarios LIMIT 10"
     
     try:
         # Ejecutar la consulta

@@ -1,98 +1,62 @@
 from cassandra.cluster import Cluster
-from cassandra.query import SimpleStatement
-import random
-import string
+from cassandra.auth import PlainTextAuthProvider
+import csv
 
-# Conectar al clúster de Cassandra
-cluster = Cluster(['127.0.0.1'])  # Cambia esto si tu Cassandra está en otro host
-session = cluster.connect()
+# Configura la conexión a Cassandra (ajusta estos valores según tu entorno)
+cluster = Cluster(['127.0.0.1'])  # IP del nodo de Cassandra
+session = cluster.connect()  # Conéctate sin especificar una base de datos inicial
 
-# Seleccionar el keyspace donde vamos a trabajar
-session.set_keyspace('datos')
-
-# Función para generar un nombre aleatorio
-def random_string(length=10):
-    return ''.join(random.choices(string.ascii_lowercase, k=length))
-
-# Eliminar la tabla id_counter si ya existe (para recrearla correctamente)
-session.execute("""
-    DROP TABLE IF EXISTS id_counter
-""")
-
-session.execute("""
-    DROP TABLE IF EXISTS sample_data
-""")
-
-# Crear la tabla id_counter con la columna counter_value definida como COUNTER
-session.execute("""
-    CREATE TABLE IF NOT EXISTS id_counter (
-        table_name TEXT PRIMARY KEY,
-        counter_value COUNTER
-    )
-""")
-
-# Inicializar el contador (solo si no existe)
-def initialize_counter():
-    # Verificar si ya existe una fila en la tabla id_counter para 'sample_data'
-    result = session.execute("""
-        SELECT counter_value FROM id_counter WHERE table_name = 'sample_data'
+# Crear la base de datos y la tabla (si no existen)
+def crear_tabla():
+    # Crear la keyspace 'test_db' si no existe
+    session.execute("""
+    CREATE KEYSPACE IF NOT EXISTS test_db WITH replication = {'class': 'SimpleStrategy', 'replication_factor': 1};
     """)
     
-    # Si no existe, establecer el contador en 0
-    if not result.one():
-        # Usamos UPDATE en lugar de INSERT para la columna COUNTER
-        session.execute("""
-            UPDATE id_counter
-            SET counter_value = counter_value + 0  -- Esto inicializa el contador a 0
-            WHERE table_name = 'sample_data'
-        """)
-
-# Llamar a la función para inicializar el contador
-initialize_counter()
-
-# Función para obtener el siguiente id autoincremental
-def get_next_id():
-    # Incrementar el contador
+    # Usar la keyspace 'test_db'
+    session.set_keyspace('test_db')
+    
+    # Crear la tabla 'usuarios' si no existe
     session.execute("""
-        UPDATE id_counter
-        SET counter_value = counter_value + 1
-        WHERE table_name = 'sample_data'
-    """)
-
-    # Recuperar el valor actual del contador
-    result = session.execute("""
-        SELECT counter_value FROM id_counter WHERE table_name = 'sample_data'
-    """)
-    next_id = result.one()[0]  # Obtener el valor del contador
-    return next_id
-
-# Crear la tabla (si no existe) para los datos
-session.execute("""
-    CREATE TABLE IF NOT EXISTS sample_data (
+    CREATE TABLE IF NOT EXISTS usuarios (
         id INT PRIMARY KEY,
-        name TEXT,
-        value INT
-    )
-""")
-
-# Insertar 1000 registros
-for i in range(1000000):
-    # Generar un nombre y un valor
-    name = f'nombre {i}'
-    value = int(i * 0.5)
-    id = get_next_id()
-
-    # Insertar los datos en la tabla
-    insert_statement = SimpleStatement("""
-        INSERT INTO sample_data (id, name, value) 
-        VALUES (%s, %s, %s)
+        nombre TEXT,
+        numero INT
+    );
     """)
-    session.execute(insert_statement, (id, name, value))
 
-print("Se han insertado 1000000 datos correctamente.")
+# Función para cargar datos del archivo CSV a Cassandra
+def cargar_datos_csv(csv_file):
+    with open(csv_file, 'r', encoding='utf-8') as f:
+        csv_reader = csv.reader(f)
+        next(csv_reader)  # Omite el encabezado del CSV si lo tiene
+        
+        for row in csv_reader:
+            # Asume que el CSV tiene el formato: id, nombre, número
+            id = int(row[0])
+            nombre = row[1]
+            
+            # Asegúrate de que 'numero' es un número entero
+            try:
+                numero = int(row[2])
+            except ValueError:
+                # Si no se puede convertir a int, manejar el error (por ejemplo, asignar un valor por defecto)
+                print(f"Valor inválido para 'numero': {row[2]} (se omitirá esta fila)")
+                continue  # Omite la fila si el valor es inválido
 
-# Cerrar la conexión
-session.shutdown()
+            # Inserta los datos en la tabla de Cassandra
+            query = "INSERT INTO usuarios (id, nombre, numero) VALUES (%s, %s, %s)"
+            session.execute(query, (id, nombre, numero))
+            print(f"Insertado: {id}")
+
+
+# Llamada a la función de creación de tabla
+crear_tabla()
+
+# Llamada a la función de carga de CSV
+csv_file = 'dataset.csv'  # Cambia esto al nombre de tu archivo CSV
+cargar_datos_csv(csv_file)
+
+# Cierra la conexión
 cluster.shutdown()
-
 
