@@ -14,8 +14,8 @@ connection = mysql.connector.connect(**config)
 cursor = connection.cursor()
 
 # Leer y ejecutar el archivo SQL
-with open("create_tableSQL.sql", "r") as sql_file:
-    sql_script = sql_file.read()
+sql_script = "CREATE TABLE IF NOT EXISTS dataset (id INT PRIMARY KEY,nombre VARCHAR(100),numero INT);"
+
 
 # Ejecutar el script de creación de tabla
 try:
